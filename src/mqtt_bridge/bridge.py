@@ -56,13 +56,17 @@ class RosToMqttBridge(Bridge):
     :param str topic_to: outgoing MQTT topic path
     :param class msg_type: subclass of ROS Message
     :param (float|None) frequency: publish frequency
+    :param bool latched: retain the last message on the MQTT topic (default: False)
+    :param int qos: MQTT quality of service (default: 0, max: 2)
     """
 
-    def __init__(self, topic_from, topic_to, msg_type, frequency=None):
+    def __init__(self, topic_from, topic_to, msg_type, frequency=None, latched=False, qos=0):
         self._topic_from = topic_from
         self._topic_to = self._extract_private_path(topic_to)
         self._last_published = rospy.get_time()
         self._interval = 0 if frequency is None else 1.0 / frequency
+        self._latched = latched
+        self._qos = qos
         rospy.Subscriber(topic_from, msg_type, self._callback_ros)
 
     def _callback_ros(self, msg):
@@ -74,7 +78,9 @@ class RosToMqttBridge(Bridge):
 
     def _publish(self, msg):
         payload = bytearray(self._serialize(extract_values(msg)))
-        self._mqtt_client.publish(topic=self._topic_to, payload=payload)
+        self._mqtt_client.publish(
+            topic=self._topic_to, payload=payload,
+            qos=self._qos, retain=self._latched)
 
 
 class MqttToRosBridge(Bridge):
@@ -84,22 +90,26 @@ class MqttToRosBridge(Bridge):
     :param str topic_to: outgoing ROS topic path
     :param class msg_type: subclass of ROS Message
     :param (float|None) frequency: publish frequency
-    :param int queue_size: ROS publisher's queue size
+    :param int queue_size: ROS publisher's queue size (default: 10)
+    :param bool latch: latch the ROS topic (default: False)
+    :param int qos: MQTT quality of service (default: 0, max: 2)
     """
 
     def __init__(self, topic_from, topic_to, msg_type, frequency=None,
-                 queue_size=10):
+                 queue_size=10, latched=False, qos=0):
         self._topic_from = self._extract_private_path(topic_from)
         self._topic_to = topic_to
         self._msg_type = msg_type
         self._queue_size = queue_size
+        self._latched = latched
+        self._qos = qos
         self._last_published = rospy.get_time()
         self._interval = None if frequency is None else 1.0 / frequency
         # Adding the correct topic to subscribe to
-        self._mqtt_client.subscribe(self._topic_from)
+        self._mqtt_client.subscribe(self._topic_from, qos=self._qos)
         self._mqtt_client.message_callback_add(self._topic_from, self._callback_mqtt)
         self._publisher = rospy.Publisher(
-            self._topic_to, self._msg_type, queue_size=self._queue_size)
+            self._topic_to, self._msg_type, queue_size=self._queue_size, latch=self._latched)
 
     def _callback_mqtt(self, client, userdata, mqtt_msg):
         u""" callback from MQTT
