@@ -3,7 +3,7 @@ mqtt:
     protocol: 4      # MQTTv311
   connection:
     host: localhost
-    port: 1883
+    port: 8883
     keepalive: 60
   private_path: device/001
 # Default is json serialiser, msgpack is more efficient
@@ -41,3 +41,21 @@ bridge:
     msg_type: std_msgs.msg:String
     topic_from: ~/echo
     topic_to: /private/back
+  # Dynamic Connection Server
+  - factory: mqtt_bridge.bridge:DynamicBridgeServer
+    control_topic: '__dynamic_server'
+  - factory: mqtt_bridge.bridge:PublishBridge
+    control_topic: '__dynamic_server'
+    msg_type: std_msgs.msg:String
+    topic_from: /publish
+    topic_to: /return
+    latched: true
+    qos: 2
+  - factory: mqtt_bridge.bridge:SubscribeBridge
+    control_topic: '__dynamic_server'
+    msg_type: std_msgs.msg:String
+    topic_from: /A/in
+    topic_to: /A/out
+    latched: true
+    qos: 2
+
