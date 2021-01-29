@@ -19,6 +19,21 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
+Forthcoming
+-----------
+* missing install target
+* Merge branch 'pr_upstream' into melodic-devel
+* example now also has DynamicServer example
+  and further examples of qos and latch
+* action server launch file is working
+  with prefix and dynamic server
+* DynamicServer implementation working
+* added launching own MQTT server
+* removed
+* intial actionlib mqtt setup
+* support for latched (retained) topics and QoS
+* Contributors: Marc Hanheide
+
 1.0.0 (2021-01-29)
 ------------------
 * 0.2.1
