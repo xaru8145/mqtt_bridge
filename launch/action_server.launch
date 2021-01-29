@@ -6,6 +6,9 @@
   <!-- the name prefix of the robot (important in multirobot setup) -->
   <arg name="prefix" default="" />
 
+  <!-- the control port for the dynamic server -->
+  <arg name="control_topic" default="__dynamic_server" />
+
   <!-- the action type prefix, with the suffix "Goal" etc. -->
   <arg name="action_type" default="actionlib_tutorials.msg:FibonacciAction" />
 
@@ -13,7 +16,7 @@
   <arg name="mqtt_bridge_ip" default="$(optenv MQTT_BRIDGE_IP localhost)" />
 
   <!-- the port of the coordination_server mqtt_bridge server -->
-  <arg name="mqtt_bridge_port" default="$(optenv MQTT_BRIDGE_PORT 1883)" />
+  <arg name="mqtt_bridge_port" default="$(optenv MQTT_BRIDGE_PORT 8883)" />
 
   <group ns="mqtt_action_adapter$(arg prefix)$(arg action)">
 
@@ -30,35 +33,40 @@ mqtt:
 #serializer: msgpack:dumps
 #deserializer: msgpack:loads
 bridge:
-  # Outgoing to MQTT
-  - factory: mqtt_bridge.bridge:RosToMqttBridge
+  # Outgoing to Server
+  - factory: mqtt_bridge.bridge:PublishBridge
+    control_topic: '$(arg control_topic)'
     msg_type: 'actionlib_msgs.msg:GoalStatusArray'
     topic_from: '$(arg action)/status'
-    topic_to: '$(arg prefix)/$(arg action)/status'
+    topic_to: '$(arg prefix)$(arg action)/status'
     latched: false
     qos: 0
-  - factory: mqtt_bridge.bridge:RosToMqttBridge
+  - factory: mqtt_bridge.bridge:PublishBridge
+    control_topic: '$(arg control_topic)'
     msg_type: '$(arg action_type)Result'
     topic_from: '$(arg action)/result'
-    topic_to: '$(arg prefix)/$(arg action)/result'
+    topic_to: '$(arg prefix)$(arg action)/result'
     latched: false
     qos: 2
-  - factory: mqtt_bridge.bridge:RosToMqttBridge
+  - factory: mqtt_bridge.bridge:PublishBridge
+    control_topic: '$(arg control_topic)'
     msg_type: '$(arg action_type)Feedback'
     topic_from: '$(arg action)/feedback'
-    topic_to: '$(arg prefix)/$(arg action)/feedback'
+    topic_to: '$(arg prefix)$(arg action)/feedback'
     latched: false
     qos: 0
-  # Incoming from MQTT
-  - factory: mqtt_bridge.bridge:MqttToRosBridge
+  # Incoming from Server
+  - factory: mqtt_bridge.bridge:SubscribeBridge
+    control_topic: '$(arg control_topic)'
     msg_type: '$(arg action_type)Goal'
-    topic_from: '$(arg prefix)/$(arg action)/goal'
+    topic_from: '$(arg prefix)$(arg action)/goal'
     topic_to: '$(arg action)/goal'
     latched: false
     qos: 2
-  - factory: mqtt_bridge.bridge:MqttToRosBridge
+  - factory: mqtt_bridge.bridge:SubscribeBridge
+    control_topic: '$(arg control_topic)'
     msg_type: 'actionlib_msgs.msg:GoalID'
-    topic_from: '$(arg prefix)/$(arg action)/cancel'
+    topic_from: '$(arg prefix)$(arg action)/cancel'
     topic_to: '$(arg action)/cancel'
     latched: false
     qos: 2
