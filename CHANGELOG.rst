@@ -19,8 +19,8 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
-Forthcoming
------------
+1.0.1 (2021-01-29)
+------------------
 * missing install target
 * Merge branch 'pr_upstream' into melodic-devel
 * example now also has DynamicServer example
