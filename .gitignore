@@ -142,3 +142,4 @@ ENV/
 ### JetBrains
 # Project files
 .idea/
+.vscode/
