@@ -19,8 +19,8 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
-Forthcoming
------------
+1.0.0 (2021-01-29)
+------------------
 * 0.2.1
 * changelog
 * changed version number
