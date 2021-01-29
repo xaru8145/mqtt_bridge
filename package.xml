@@ -5,7 +5,8 @@
   <description>The mqtt_bridge package</description>
 
   <author email="junya.hayashi@groove-x.com">Junya Hayashi</author>
-  <maintainer email="junya.hayashi@groove-x.com">Junya Hayashi</maintainer>
+  <author email="marc@hanheide.net">Marc Hanheide</author>
+  <maintainer email="marc@hanheide.net">Marc Hanheide</maintainer>
 
   <license>MIT</license>
 
