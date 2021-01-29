@@ -6,18 +6,23 @@ mqtt:
     port: 1883
     keepalive: 60
   private_path: device/001
-serializer: msgpack:dumps
-deserializer: msgpack:loads
+# Default is json serialiser, msgpack is more efficient
+#serializer: msgpack:dumps
+#deserializer: msgpack:loads
 bridge:
   # ping pong
   - factory: mqtt_bridge.bridge:RosToMqttBridge
     msg_type: std_msgs.msg:Bool
     topic_from: /ping
     topic_to: ping
+    latched: true
+    qos: 2
   - factory: mqtt_bridge.bridge:MqttToRosBridge
     msg_type: std_msgs.msg:Bool
     topic_from: ping
     topic_to: /pong
+    latched: true
+    qos: 2
   # echo back
   - factory: mqtt_bridge.bridge:RosToMqttBridge
     msg_type: std_msgs.msg:String
