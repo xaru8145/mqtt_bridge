@@ -10,7 +10,7 @@ import rospy
 from .util import lookup_object, extract_values, populate_instance
 
 
-def create_bridge(factory, msg_type, topic_from, topic_to, **kwargs):
+def create_bridge(factory, **kwargs):
     u""" bridge generator function
 
     :param (str|class) factory: Bridge class
@@ -24,14 +24,7 @@ def create_bridge(factory, msg_type, topic_from, topic_to, **kwargs):
         factory = lookup_object(factory)
     if not issubclass(factory, Bridge):
         raise ValueError("factory should be Bridge subclass")
-    if isinstance(msg_type, basestring):
-        msg_type = lookup_object(msg_type)
-    if not issubclass(msg_type, rospy.Message):
-        raise TypeError(
-            "msg_type should be rospy.Message instance or its string"
-            "reprensentation")
-    return factory(
-        topic_from=topic_from, topic_to=topic_to, msg_type=msg_type, **kwargs)
+    return factory(**kwargs)
 
 
 class Bridge(object):
@@ -47,6 +40,50 @@ class Bridge(object):
     _serialize = inject.attr('serializer')
     _deserialize = inject.attr('deserializer')
     _extract_private_path = inject.attr('mqtt_private_path_extractor')
+
+
+class DynamicBridgeServer(Bridge):
+    u""" Bridge from ROS topic to MQTT
+
+    :param str topic_from: incoming ROS topic path
+    :param str topic_to: outgoing MQTT topic path
+    :param class msg_type: subclass of ROS Message
+    :param (float|None) frequency: publish frequency
+    :param bool latched: retain the last message on the MQTT topic (default: False)
+    :param int qos: MQTT quality of service (default: 0, max: 2)
+    """
+
+    def __init__(self, control_topic):
+        self._control_topic = control_topic + '/#'
+        self._mqtt_client.subscribe(self._control_topic, qos=2)
+        self._mqtt_client.message_callback_add(self._control_topic, self._callback_mqtt)
+        self._bridges = set([])
+        rospy.loginfo('DynamicBridgeServer started on control topic %s' % control_topic)
+
+    def _callback_mqtt(self, client, userdata, mqtt_msg):
+        u""" callback from MQTT
+
+        :param mqtt.Client client: MQTT client used in connection
+        :param userdata: user defined data
+        :param mqtt.MQTTMessage mqtt_msg: MQTT message
+        """
+        rospy.loginfo("MQTT received from {}".format(mqtt_msg.topic))
+        msg_dict = self._deserialize(mqtt_msg.payload)
+        print(msg_dict)
+
+        if msg_dict['op'] == 'mqtt2ros_subscribe':
+            rospy.loginfo("forward mqtt topic to ros %s" % (
+                msg_dict['args']))
+            self._bridges.add(MqttToRosBridge(
+                **msg_dict['args'])
+            )
+
+        if msg_dict['op'] == 'ros2mqtt_subscribe':
+            rospy.loginfo("forward ros topic to mqtt %s" % (
+                msg_dict['args']))
+            self._bridges.add(RosToMqttBridge(
+                **msg_dict['args'])
+            )
 
 
 class RosToMqttBridge(Bridge):
@@ -67,6 +104,13 @@ class RosToMqttBridge(Bridge):
         self._interval = 0 if frequency is None else 1.0 / frequency
         self._latched = latched
         self._qos = qos
+        if isinstance(msg_type, basestring):
+            msg_type = lookup_object(msg_type)
+        if not issubclass(msg_type, rospy.Message):
+            raise TypeError(
+                "msg_type should be rospy.Message instance or its string"
+                "reprensentation")
+
         rospy.Subscriber(topic_from, msg_type, self._callback_ros)
 
     def _callback_ros(self, msg):
@@ -99,6 +143,12 @@ class MqttToRosBridge(Bridge):
                  queue_size=10, latched=False, qos=0):
         self._topic_from = self._extract_private_path(topic_from)
         self._topic_to = topic_to
+        if isinstance(msg_type, basestring):
+            msg_type = lookup_object(msg_type)
+        if not issubclass(msg_type, rospy.Message):
+            raise TypeError(
+                "msg_type should be rospy.Message instance or its string"
+                "reprensentation")
         self._msg_type = msg_type
         self._queue_size = queue_size
         self._latched = latched
@@ -138,5 +188,61 @@ class MqttToRosBridge(Bridge):
         msg_dict = self._deserialize(mqtt_msg.payload)
         return populate_instance(msg_dict, self._msg_type())
 
+class SubscribeBridge(MqttToRosBridge):
 
-__all__ = ['create_bridge', 'Bridge', 'RosToMqttBridge', 'MqttToRosBridge']
+    def __init__(self, topic_from, topic_to, msg_type, control_topic="__dynamic_server", frequency=None, latched=False, qos=0):
+        self._control_topic = control_topic + '/' + topic_from.replace('/', '_')
+        self._mqtt_topic = control_topic + '_DATA_' + (topic_from + "_TO_" + topic_to).replace('/','_')
+        super(SubscribeBridge, self).__init__(self._mqtt_topic, topic_to, msg_type, frequency, latched, qos)
+
+        rospy.loginfo('SubscribeBridge: subscribe ROS topic %s to topic %s via MQTT %s' %
+            (topic_from, topic_to, self._mqtt_topic)
+        )
+
+        cmd = {
+            'op': 'ros2mqtt_subscribe',
+            'args': {
+                'topic_from': topic_from, 
+                'topic_to': self._mqtt_topic,
+                'msg_type': msg_type,
+                'frequency': frequency,
+                'latched': latched,
+                'qos': qos
+            }
+        }
+        payload = bytearray(self._serialize(cmd))
+        self._mqtt_client.publish(
+            topic=self._control_topic, payload=payload,
+            qos=2, retain=True)
+
+
+class PublishBridge(RosToMqttBridge):
+
+    def __init__(self, topic_from, topic_to, msg_type, control_topic="__dynamic_server", frequency=None, latched=False, qos=0):
+        self._control_topic = control_topic + '/' + topic_to.replace('/', '_')
+        self._mqtt_topic = control_topic + '_DATA_' + (topic_from + "_TO_" + topic_to).replace('/','_')
+        super(PublishBridge, self).__init__(topic_from, self._mqtt_topic, msg_type, frequency, latched, qos)
+
+        rospy.loginfo('PublishBridge: publish from ROS topic %s to topic %s via MQTT %s' %
+            (topic_from, topic_to, self._mqtt_topic)
+        )
+
+        cmd = {
+            'op': 'mqtt2ros_subscribe',
+            'args': {
+                'topic_from': self._mqtt_topic,
+                'topic_to': topic_to,
+                'msg_type': msg_type,
+                'frequency': frequency,
+                'latched': latched,
+                'qos': qos
+            }
+        }
+        payload = bytearray(self._serialize(cmd))
+        self._mqtt_client.publish(
+            topic=self._control_topic, payload=payload,
+            qos=2, retain=True)
+
+
+
+__all__ = ['create_bridge', 'Bridge', 'RosToMqttBridge', 'MqttToRosBridge', 'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge']
