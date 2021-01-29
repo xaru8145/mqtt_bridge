@@ -2,8 +2,8 @@
 Changelog for package mqtt_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2021-01-29)
+------------------
 * changed version number
 * example now also has DynamicServer example
   and further examples of qos and latch
