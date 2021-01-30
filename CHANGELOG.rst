@@ -19,8 +19,8 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
-Forthcoming
------------
+1.1.0 (2021-01-30)
+------------------
 * Merge pull request `#1 <https://github.com/LCAS/mqtt_bridge/issues/1>`_ from LCAS/remoteserver
   Remoteserver implementation complete
 * implementation of RemoteServer working
