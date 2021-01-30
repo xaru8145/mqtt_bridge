@@ -59,10 +59,13 @@ class DynamicBridgeServer(Bridge):
     def __init__(self, control_topic="__dynamic_server"):
         self._control_topic = control_topic + '/topic/#'
         self._service_topic = control_topic + '/service/request/#'
+        self._register_service_topic = control_topic + '/service/register/#'
         self._mqtt_client.subscribe(self._control_topic, qos=2)
         self._mqtt_client.message_callback_add(self._control_topic, self._callback_mqtt_topic)
         self._mqtt_client.subscribe(self._service_topic, qos=2)
         self._mqtt_client.message_callback_add(self._service_topic, self._callback_mqtt_service)
+        self._mqtt_client.subscribe(self._register_service_topic, qos=2)
+        self._mqtt_client.message_callback_add(self._register_service_topic, self._register_service)
         self._bridges = set([])
         rospy.loginfo('DynamicBridgeServer started on control topic %s' % control_topic)
 
@@ -95,6 +98,16 @@ class DynamicBridgeServer(Bridge):
             self._mqtt_client.publish(
                 topic=msg_dict['response_topic'], payload=payload,
                 qos=2, retain=False)
+
+    def _register_service(self, client, userdata, mqtt_msg):
+
+        msg_dict = self._deserialize(mqtt_msg.payload)
+
+        if msg_dict['op'] == 'register':
+            rospy.loginfo("register service proxy")
+            self._bridges.add(RemoteService(
+                **msg_dict['args'])
+            )
 
     def _callback_mqtt_topic(self, client, userdata, mqtt_msg):
         u""" callback from MQTT
@@ -278,6 +291,30 @@ class PublishBridge(RosToMqttBridge):
             qos=2, retain=True)
 
 
+class LocalServiceProxy(Bridge):
+
+    def __init__(self, local_server, remote_server, srv_type, control_topic="__remote_server"):
+        self._register_service_topic = control_topic + '/service/register/' + (local_server + "_TO_" + remote_server).replace('/','_')
+
+        rospy.loginfo('LocalServiceProxy: offer remote access to ROS service  %s as %s via MQTT' %
+            (local_server, remote_server)
+        )
+
+        cmd = {
+            'op': 'register',
+            'args': {
+                'local_server': remote_server,
+                'remote_server': local_server,
+                'srv_type': srv_type,
+                'control_topic': control_topic
+            }
+        }
+        payload = bytearray(self._serialize(cmd))
+        self._mqtt_client.publish(
+            topic=self._register_service_topic, payload=payload,
+            qos=2, retain=True)
+
+
 class RemoteService(Bridge):
 
     def __init__(self, local_server, remote_server, srv_type, control_topic="__remote_server"):
@@ -349,4 +386,4 @@ class RemoteService(Bridge):
 
 __all__ = [
     'create_bridge', 'Bridge', 'RosToMqttBridge', 'MqttToRosBridge', 
-    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteService']
+    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteService', 'LocalServiceProxy']
