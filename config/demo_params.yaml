@@ -41,9 +41,13 @@ bridge:
     msg_type: std_msgs.msg:String
     topic_from: ~/echo
     topic_to: /private/back
-  # Dynamic Connection Server
+  # Dynamic Bridge Server: This server should almost always be enabled as it 
+  # responses to RemoteServer requests, and also faciliates the PublishBridge 
+  # and the SubscribeBride from the respective remote sides
   - factory: mqtt_bridge.bridge:DynamicBridgeServer
     control_topic: '__dynamic_server'
+  # A PublishBridge interacts with the DynamicBridgeServer and publishes anything that
+  # happens locally on the `topic_from` topic onto the `topic_to` topic at the remote end
   - factory: mqtt_bridge.bridge:PublishBridge
     control_topic: '__dynamic_server'
     msg_type: std_msgs.msg:String
@@ -51,6 +55,8 @@ bridge:
     topic_to: /return
     latched: true
     qos: 2
+  # A SubscribeBridge interacts with the DynamicBridgeServer and publishes anything that
+  # happens on the remote topic `topic_from` topic onto the local `topic_to` topic
   - factory: mqtt_bridge.bridge:SubscribeBridge
     control_topic: '__dynamic_server'
     msg_type: std_msgs.msg:String
@@ -58,4 +64,11 @@ bridge:
     topic_to: /A/out
     latched: true
     qos: 2
+# The RemoteServer bridge allows to call a ROS server on the remote side, via the 
+# DynamicBridgeServer that proxies the request on the remote side
+  - factory: mqtt_bridge.bridge:RemoteServer
+    control_topic: '__dynamic_server'
+    local_server: /local/service
+    remote_server: /rosout/get_loggers
+    srv_type:  roscpp.srv:GetLoggers
 
