@@ -19,8 +19,8 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
-Forthcoming
------------
+1.2.0 (2021-01-30)
+------------------
 * added LocalServiceProxy
 * renamed to RemoteService
 * Contributors: Marc Hanheide
