@@ -278,7 +278,7 @@ class PublishBridge(RosToMqttBridge):
             qos=2, retain=True)
 
 
-class RemoteServer(Bridge):
+class RemoteService(Bridge):
 
     def __init__(self, local_server, remote_server, srv_type, control_topic="__remote_server"):
         self._local_server = local_server
@@ -349,4 +349,4 @@ class RemoteServer(Bridge):
 
 __all__ = [
     'create_bridge', 'Bridge', 'RosToMqttBridge', 'MqttToRosBridge', 
-    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteServer']
+    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteService']

@@ -64,9 +64,9 @@ bridge:
     topic_to: /A/out
     latched: true
     qos: 2
-# The RemoteServer bridge allows to call a ROS server on the remote side, via the 
+# The RemoteService bridge allows to call a ROS server on the remote side, via the 
 # DynamicBridgeServer that proxies the request on the remote side
-  - factory: mqtt_bridge.bridge:RemoteServer
+  - factory: mqtt_bridge.bridge:RemoteService
     control_topic: '__dynamic_server'
     local_server: /local/service
     remote_server: /rosout/get_loggers
