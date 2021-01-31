@@ -157,7 +157,7 @@ Also, you can create custom bridge class by inheriting `mqtt_brige.bridge.Bridge
 
 ## Addtional dynamic bridges and service calls (extension by @marc-hanheide)
 
-See `demo_params.yaml` for the use and parameters of the additional bridges.
+See [`demo_params.yaml`](config/demo_params.yaml) for the use and parameters of the additional bridges.
 
 ### DynamicBridgeServer (Server-Client use case)
 
