@@ -1,13 +1,11 @@
 # mqtt_bridge
 
-[![CircleCI](https://circleci.com/gh/groove-x/mqtt_bridge.svg?style=svg)](https://circleci.com/gh/groove-x/mqtt_bridge)
-
-mqtt_bridge provides a functionality to bridge between ROS and MQTT in bidirectional.
+mqtt_bridge provides a functionality to bridge between ROS and MQTT, bidirectional.
 
 
 ## Principle
 
-`mqtt_bridge` uses ROS message as its protocol. Messages from ROS are serialized by json (or messagepack) for MQTT, and messages from MQTT are deserialized for ROS topic. So MQTT messages should be ROS message compatible. (We use `rosbridge_library.internal.message_conversion` for message conversion.)
+`mqtt_bridge` uses ROS message as its protocol. Messages from ROS are serialized by json (or messagepack) for MQTT, and messages from MQTT are deserialized for ROS topic. So the MQTT messages should be ROS message compatible. (We use `rosbridge_library.internal.message_conversion` for message conversion.)
 
 This limitation can be overcome by defining custom bridge class, though.
 
@@ -157,6 +155,21 @@ bridge:
 
 Also, you can create custom bridge class by inheriting `mqtt_brige.bridge.Bridge`.
 
+## Addtional dynamic bridges and service calls (extension by @marc-hanheide)
+
+See `demo_params.yaml` for the use and parameters of the additional bridges.
+
+### DynamicBridgeServer (Server-Client use case)
+
+The main principle here is that a server-client architecture is implemented, with the idea that not both ends of the mqtt connection need to be necessarily set up, but that a ROS systems (here seen as clients) can connect via MQTT to another ROS system (the "server"), and initiate the transmission of topics from either side, i.e., a client can initiate a local topic (`from_topic`) to be forwarded to the other side via MQTT to be republished there as another topics (`to_topic`). (Note: `from_topic` and `to_topic` could well be the same, in which case the MQTT connections is completely transparent.) The server in this case does not need to be configured at all (other than running the `DynamicBridgeServer`). The client will use the `PublishBridge` to advertise the local `from_topic` on the server-side as `to_topic`. Likewise, the client can subscribe to a server-side topic using the `SubscribeBridge`. Then the `from_topic` is on the remoter (server) side and is forwarded onto the the local `to_topic`. 
+
+The main benefit here is that in all these cases, the server-side does not need further configuration.
+
+### ROS services
+
+Also via `DynamicBridgeServer` it is now possible to expose ROS service either way. Again, one side can expose a local ROS service via the `LocalServiceProxy`, mapping the `local_server` (e.g. `/roscpp/get_logger`) to a `remote_server`.
+
+Similarly, the `RemoteService` bridge allows to access a service available on the `remote_server`.
 
 ## License
 
