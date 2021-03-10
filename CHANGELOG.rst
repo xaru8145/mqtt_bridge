@@ -19,6 +19,15 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
+Forthcoming
+-----------
+* Merge pull request `#2 <https://github.com/LCAS/mqtt_bridge/issues/2>`_ from francescodelduchetto/avoid-loops
+  Avoid loops in connection with the server
+* do not start a new bridge in the Server if the bridge with the reverse connection is already running bcs it create loops in ros messages
+* Update README.md
+* improved documentation
+* Contributors: Marc Hanheide, francescodelduchetto
+
 1.2.0 (2021-01-30)
 ------------------
 * added LocalServiceProxy
