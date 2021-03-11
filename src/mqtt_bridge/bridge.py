@@ -12,6 +12,7 @@ from threading  import Condition
 from queue import Queue
 from uuid import uuid4
 
+from threading import Thread
 
 def create_bridge(factory, **kwargs):
     u""" bridge generator function
@@ -62,6 +63,10 @@ class DynamicBridgeServer(Bridge):
         rospy.loginfo('DynamicBridgeServer started on control topic %s' % control_topic)
 
     def _callback_mqtt_service(self, client, userdata, mqtt_msg):
+        t = Thread(target=self.__callback_mqtt_service, args=(userdata, mqtt_msg))
+        t.start()
+
+    def __callback_mqtt_service(self, userdata, mqtt_msg):
         rospy.logdebug("MQTT service call received from {}".format(mqtt_msg.topic))
         msg_dict = self._deserialize(mqtt_msg.payload)
         service_type = lookup_object(msg_dict['type'])
@@ -75,6 +80,7 @@ class DynamicBridgeServer(Bridge):
         # create empty response object
         response = response_type()
         msg_dict['op'] = 'response'
+
         try:
             rospy.logdebug('waiting for service %s' % msg_dict['service'])
             rospy.wait_for_service(msg_dict['service'], 1)
