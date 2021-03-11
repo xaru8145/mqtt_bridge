@@ -19,8 +19,8 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
-Forthcoming
------------
+1.2.2 (2021-03-11)
+------------------
 * Merge pull request `#4 <https://github.com/LCAS/mqtt_bridge/issues/4>`_ from LCAS/futures
   simple threading solution
 * simple threading solution
