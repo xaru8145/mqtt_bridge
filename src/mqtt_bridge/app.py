@@ -61,20 +61,24 @@ def mqtt_bridge_node():
         bridges.append(create_bridge(**bridge_args))
 
     # start MQTT loop
-    mqtt_client.loop_start()
-
     # register shutdown callback and spin
     rospy.on_shutdown(mqtt_client.disconnect)
     rospy.on_shutdown(mqtt_client.loop_stop)
-    rospy.spin()
+    while not rospy.is_shutdown():
+        try:
+            mqtt_client.loop_forever()
+        except Exception as e:
+            print(e)
+        rospy.sleep(1)
 
 
 def _on_connect(client, userdata, flags, response_code):
     rospy.loginfo('MQTT connected')
+    #while not rospy.is_shutdown:        
+    #    mqtt_client.loop_forever()
 
 
 def _on_disconnect(client, userdata, response_code):
     rospy.loginfo('MQTT disconnected')
-
 
 __all__ = ['mqtt_bridge_node']

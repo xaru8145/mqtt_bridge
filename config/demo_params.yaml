@@ -1,6 +1,8 @@
 mqtt:
   client:
     protocol: 4      # MQTTv311
+    client_id: client1
+    clean_session: False
   connection:
     host: localhost
     port: 8883
