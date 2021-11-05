@@ -25,7 +25,7 @@ class TestMqttBridge(unittest.TestCase):
         self.mqtt_callback_ping = MagicMock()
         self.mqtt_callback_echo = MagicMock()
         self.mqttc = mqtt.Client("client-id")
-        self.mqttc.connect("localhost", 1883)
+        self.mqttc.connect("localhost", 8883)
         self.mqttc.message_callback_add("ping", self.mqtt_callback_ping)
         self.mqttc.message_callback_add("echo", self.mqtt_callback_echo)
         self.mqttc.subscribe("ping")
@@ -37,10 +37,12 @@ class TestMqttBridge(unittest.TestCase):
         self.ros_callback_pong = MagicMock()
         self.ros_callback_echo = MagicMock()
         self.ros_callback_back = MagicMock()
+        self.ros_callback_dynpub = MagicMock()
         self.subscriber_ping = rospy.Subscriber("/ping", Bool, self.ros_callback_ping)
         self.subscriber_pong = rospy.Subscriber("/pong", Bool, self.ros_callback_pong)
         self.subscriber_echo = rospy.Subscriber("/echo", String, self.ros_callback_echo)
         self.subscriber_back = rospy.Subscriber("/back", String, self.ros_callback_back)
+        self.subscriber_dynpub = rospy.Subscriber("/return", String, self.ros_callback_dynpub)
 
     def tearDown(self):
         self.subscriber_ping.unregister()
@@ -72,7 +74,7 @@ class TestMqttBridge(unittest.TestCase):
         return subs
 
     def _wait_callback(self, callback_func):
-        for i in range(10):
+        for i in range(30):
             if callback_func.called:
                 return
             time.sleep(0.1)
@@ -101,6 +103,12 @@ class TestMqttBridge(unittest.TestCase):
         msg = self.mqtt_callback_echo.call_args[0][2]
         self.assertEqual(msg.topic, "echo")
         self.assertEqual(msg.payload, msgpack.dumps({"data": "hello"}))
+
+    def test_PublishBridge(self):
+        publisher = self.get_publisher("/publish", String, queue_size=1)
+        publisher.publish(String("dynamic publish"))
+        self._wait_callback(self.ros_callback_dynpub)
+        self.ros_callback_dynpub.assert_called_once_with(String("dynamic publish"))
 
 
 if __name__ == '__main__':
