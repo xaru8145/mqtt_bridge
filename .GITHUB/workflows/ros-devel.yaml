@@ -1,3 +1,12 @@
+name: ros build
+
+on:
+  push:
+    branches: [ melodic-devel ]
+  pull_request:
+    branches: [ melodic-devel ]
+
+
 jobs:
   test_docker: # On Linux, iterates on all ROS 1 and ROS 2 distributions.
     runs-on: ubuntu-latest
