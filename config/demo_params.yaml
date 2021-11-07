@@ -6,7 +6,7 @@ mqtt:
   connection:
     host: localhost
     port: 8883
-    keepalive: 60
+    keepalive: 5
   private_path: device/001
 # Default is json serialiser, msgpack is more efficient
 serializer: msgpack:dumps
