@@ -14,7 +14,6 @@ jobs:
       matrix:
         ros_distribution:
           - melodic
-          - noetic
 
         # Define the Docker image(s) associated with each ROS distribution.
         # The include syntax allows additional variables to be defined, like
