@@ -29,16 +29,11 @@ jobs:
             ros_distribution: melodic
             ros_version: 1
 
-          # Noetic Ninjemys (May 2020 - May 2025)
-          - docker_image: ubuntu:focal
-            ros_distribution: noetic
-            ros_version: 1
-
     container:
       image: ${{ matrix.docker_image }}
     steps:
       - name: setup ROS environment
-        uses: ros-tooling/setup-ros@v0.2
+        uses: LCAS/setup-ros@v0.2
         with:
           required-ros-distributions: ${{ matrix.ros_distribution }}
       - name: build and test ROS 1
