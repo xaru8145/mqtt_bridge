@@ -4,6 +4,9 @@ Changelog for package mqtt_bridge
 
 Forthcoming
 -----------
+* changelogs
+* changelogs
+* Contributors: Marc Hanheide
 
 1.3.0 (2021-11-19)
 ------------------
