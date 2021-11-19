@@ -19,6 +19,32 @@ Changelog for package mqtt_bridge
 * fix install target for directories
 * Contributors: Marc Hanheide
 
+Forthcoming
+-----------
+* Merge pull request `#12 <https://github.com/LCAS/mqtt_bridge/issues/12>`_ from LCAS/reconnection
+  Implementing stable re-connection
+* Merge pull request `#13 <https://github.com/LCAS/mqtt_bridge/issues/13>`_ from LCAS/marc-hanheide-patch-1
+  attempt to use new L-CAS tooling
+* remove noetic
+* remove noetic
+* remove noetic
+* correct tooling
+* attempt to use new L-CAS tooling
+* change keep alive to 5 seconds to detect earlier
+* deal with unstable network connection
+  * ensure loop continues even after network failure
+  * set session to NOT clean and use client_id (to maintain subscription)
+  * set corresponding ROS params to ensure we always have a valid client_id and a not clean session
+* don't retain control messages (conflict on reconnect)
+* WIP: working towards reconnection
+* included some working rostest
+* renamed
+* Merge pull request `#11 <https://github.com/LCAS/mqtt_bridge/issues/11>`_ from LCAS/github_workflow
+  first workflow
+* compelted workflowx
+* first workflow
+* Contributors: Marc Hanheide
+
 1.2.2 (2021-03-11)
 ------------------
 * Merge pull request `#4 <https://github.com/LCAS/mqtt_bridge/issues/4>`_ from LCAS/futures
