@@ -273,7 +273,7 @@ class SubscribeBridge(MqttToRosBridge):
         payload = bytearray(self._serialize(cmd))
         self._mqtt_client.publish(
             topic=self._control_topic, payload=payload,
-            qos=2, retain=True)
+            qos=2, retain=False)
 
 
 class PublishBridge(RosToMqttBridge):
@@ -301,7 +301,7 @@ class PublishBridge(RosToMqttBridge):
         payload = bytearray(self._serialize(cmd))
         self._mqtt_client.publish(
             topic=self._control_topic, payload=payload,
-            qos=2, retain=True)
+            qos=2, retain=False)
 
 
 class LocalServiceProxy(Bridge):
@@ -325,7 +325,7 @@ class LocalServiceProxy(Bridge):
         payload = bytearray(self._serialize(cmd))
         self._mqtt_client.publish(
             topic=self._register_service_topic, payload=payload,
-            qos=2, retain=True)
+            qos=2, retain=False)
 
 
 class RemoteService(Bridge):
@@ -338,10 +338,12 @@ class RemoteService(Bridge):
 
         self._srv_type_name = srv_type
         self._srv_type = lookup_object(self._srv_type_name)
-        self._serviceproxy = rospy.Service(self._local_server, self._srv_type, self._ros_handler)
+        try:
+            self._serviceproxy = rospy.Service(self._local_server, self._srv_type, self._ros_handler)
+        except Exception as e: 
+            rospy.logwarn(e)
 
     def _ros_handler(self, req):
-
         responses = {}
         lock = Condition()
 
