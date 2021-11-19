@@ -2,23 +2,6 @@
 Changelog for package mqtt_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.2.1 (2021-01-29)
-------------------
-* changed version number
-* example now also has DynamicServer example
-  and further examples of qos and latch
-* action server launch file is working
-  with prefix and dynamic server
-* DynamicServer implementation working
-* added launching own MQTT server
-* removed
-* intial actionlib mqtt setup
-* support for latched (retained) topics and QoS
-* ignore vscode
-* changed maintainer
-* fix install target for directories
-* Contributors: Marc Hanheide
-
 Forthcoming
 -----------
 
