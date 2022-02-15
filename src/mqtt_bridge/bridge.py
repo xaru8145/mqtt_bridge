@@ -53,11 +53,11 @@ class DynamicBridgeServer(Bridge):
         self._control_topic = control_topic + '/topic/#'
         self._service_topic = control_topic + '/service/request/#'
         self._register_service_topic = control_topic + '/service/register/#'
-        self._mqtt_client.subscribe(self._control_topic, qos=2)
+        self._mqtt_client.subscribe(self._control_topic, qos=1)
         self._mqtt_client.message_callback_add(self._control_topic, self._callback_mqtt_topic)
-        self._mqtt_client.subscribe(self._service_topic, qos=2)
+        self._mqtt_client.subscribe(self._service_topic, qos=1)
         self._mqtt_client.message_callback_add(self._service_topic, self._callback_mqtt_service)
-        self._mqtt_client.subscribe(self._register_service_topic, qos=2)
+        self._mqtt_client.subscribe(self._register_service_topic, qos=1)
         self._mqtt_client.message_callback_add(self._register_service_topic, self._register_service)
         self._bridges = set([])
         rospy.loginfo('DynamicBridgeServer started on control topic %s' % control_topic)
@@ -325,7 +325,7 @@ class LocalServiceProxy(Bridge):
         payload = bytearray(self._serialize(cmd))
         self._mqtt_client.publish(
             topic=self._register_service_topic, payload=payload,
-            qos=2, retain=False)
+            qos=1, retain=False)
 
 
 class RemoteService(Bridge):
@@ -373,8 +373,8 @@ class RemoteService(Bridge):
         payload = bytearray(self._serialize(request_message))
         self._mqtt_client.publish(
             topic=self._mqtt_topic_request, payload=payload,
-            qos=2, retain=False)
-    
+            qos=1, retain=False)
+
         # wait for a response
         while not rospy.is_shutdown() and request_id not in responses.keys():
             with lock:
