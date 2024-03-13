@@ -399,6 +399,45 @@ class RemoteService(Bridge):
         return r
 
 
+class MqttRosServiceBridge(Bridge):
+
+    def __init__(self, service_name, srv_type, request_topic, response_topic, qos):
+        self._service_name = service_name
+        self._mqtt_request_topic = request_topic
+        self._mqtt_response_topic = response_topic
+        self._qos = qos
+
+        self._srv_type_name = srv_type
+        self._srv_type = lookup_object(self._srv_type_name)
+
+        # Create service client
+        rospy.wait_for_service(self._service_name)
+        self._srv_client = rospy.ServiceProxy(self._service_name, self._srv_type)
+
+        # Subscribe to MQTT request topic
+        self._mqtt_client.subscribe(self._mqtt_request_topic, qos=self._qos)
+        self._mqtt_client.message_callback_add(self._mqtt_request_topic, self._req_callback)
+
+    def _req_callback(self, client, userdata, mqtt_msg):
+        rospy.logdebug("Request received from {}".format(mqtt_msg.topic))
+
+        try:
+            # Assemble ROS request object from MQTT request message
+            req_type = lookup_object(self._srv_type_name+"Request")
+            request = req_type()
+            populate_instance(self._deserialize(mqtt_msg.payload), request)
+
+            # Call corresponding service and publish to MQTT response topic
+            response = self._srv_client(request)
+            rospy.logdebug("Service called, got response")
+            self._mqtt_client.publish(
+                topic=self._mqtt_response_topic, 
+                payload=bytearray(self._serialize(extract_values(response))), 
+                qos=self._qos, retain=False)
+            rospy.logdebug("Response sent to {}".format(self._mqtt_response_topic))
+        except Exception as e:
+            rospy.logerr(e)
+
 __all__ = [
     'create_bridge', 'Bridge', 'RosToMqttBridge', 'MqttToRosBridge', 
-    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteService', 'LocalServiceProxy']
+    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteService', 'LocalServiceProxy', 'ServiceBridge']

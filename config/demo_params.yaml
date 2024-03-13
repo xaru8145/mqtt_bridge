@@ -83,3 +83,10 @@ bridge:
     remote_server: /remote/service
     srv_type:  roscpp.srv:GetLoggers
 
+# MqttRosServiceBridge example
+  - factory: mqtt_bridge.bridge:MqttRosServiceBridge
+    service_name: /rosout/get_loggers
+    srv_type: roscpp.srv:GetLoggers
+    request_topic: /rosout/get_loggers/request
+    response_topic: /rosout/get_loggers/response
+    qos: 2
