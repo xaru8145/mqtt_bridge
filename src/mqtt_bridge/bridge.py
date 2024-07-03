@@ -422,6 +422,12 @@ class MqttRosServiceBridge(Bridge):
         rospy.logdebug("Request received from {}".format(mqtt_msg.topic))
 
         try:
+            # Wait for service to be active
+            rospy.logdebug("Waiting for service: {}.".format(self._service_name))
+            rospy.wait_for_service(self._service_name, 5.0)
+            self._srv_client = rospy.ServiceProxy(self._service_name, self._srv_type)
+            rospy.logdebug("Created service: {}.".format(self._service_name))
+
             # Assemble ROS request object from MQTT request message
             req_type = lookup_object(self._srv_type_name+"Request")
             request = req_type()
@@ -435,9 +441,9 @@ class MqttRosServiceBridge(Bridge):
                 payload=bytearray(self._serialize(extract_values(response))), 
                 qos=self._qos, retain=False)
             rospy.logdebug("Response sent to {}".format(self._mqtt_response_topic))
-        except Exception as e:
+        except (Exception, rospy.ServiceException, rospy.ROSException) as e:
             rospy.logerr(e)
 
 __all__ = [
     'create_bridge', 'Bridge', 'RosToMqttBridge', 'MqttToRosBridge', 
-    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteService', 'LocalServiceProxy', 'ServiceBridge']
+    'DynamicBridgeServer', 'SubscribeBridge', 'PublishBridge', 'RemoteService', 'LocalServiceProxy', 'MqttRosServiceBridge']
