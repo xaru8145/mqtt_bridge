@@ -410,10 +410,6 @@ class MqttRosServiceBridge(Bridge):
         self._srv_type_name = srv_type
         self._srv_type = lookup_object(self._srv_type_name)
 
-        # Create service client
-        rospy.wait_for_service(self._service_name)
-        self._srv_client = rospy.ServiceProxy(self._service_name, self._srv_type)
-
         # Subscribe to MQTT request topic
         self._mqtt_client.subscribe(self._mqtt_request_topic, qos=self._qos)
         self._mqtt_client.message_callback_add(self._mqtt_request_topic, self._req_callback)
